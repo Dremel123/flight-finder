@@ -1,0 +1,17 @@
+# Personal data and caches (see the data files table in the handoff notes)
+cheapest_*.csv
+direct_*.csv
+real_options.csv
+query_cache.json
+query_cache.json.tmp
+settings.json
+favourites.json
+.flight-finder.lock
+__pycache__/
+dist/
+build/
+
+# Machine-specific or design-process files
+.impeccable/
+.vscode/
+flight-finder.desktop
