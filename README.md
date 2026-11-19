@@ -6,7 +6,7 @@ Prices come from Google Flights. They're for the number of adults you set, optio
 
 ## Download
 
-Get the latest build from the **Actions** tab (open the newest successful "Build" run, then download the artifact under *Artifacts*):
+Get the installer for your system from the [latest release](https://github.com/Dremel123/flight-finder/releases/latest):
 
 | System | File | How to install |
 |---|---|---|

@@ -1,10 +1,13 @@
 # Builds Flight Finder on Windows, macOS and Linux (PyInstaller can't cross-build), checks each app starts,
-# and uploads the installers. Run it from the Actions tab ("Run workflow") or by pushing a tag like v1.0.0.
+# and uploads the installers. Run it from the Actions tab ("Run workflow"); pushing a tag like v1.0.1 also publishes a release.
 name: Build
 on:
   workflow_dispatch:
   push:
     tags: ["v*"]
+
+permissions:
+  contents: write  # to publish releases on tags
 
 jobs:
   build:
@@ -33,3 +36,12 @@ jobs:
           name: flight-finder-${{ runner.os }}
           path: dist/*
           if-no-files-found: error
+      - name: Publish to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The three OS jobs share one release: whichever finishes first creates it
+          gh release create "$GITHUB_REF_NAME" --title "Flight Finder $GITHUB_REF_NAME" --generate-notes 2>/dev/null || true
+          gh release upload "$GITHUB_REF_NAME" dist/* --clobber

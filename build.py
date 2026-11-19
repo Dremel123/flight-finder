@@ -18,7 +18,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 WORK = Path(os.environ.get("BUILD_DIR") or Path.home() / ".cache" / "flight-finder-build")  # on disk: /tmp is RAM on some Linux setups
-VERSION = "1.0.0"
+VERSION = "1.0.0"  # also bump in flight_finder.spec (CFBundleShortVersionString) and the release tag
 PACKAGES = ["PySide6==6.11.0", "pandas==3.0.3", "fast-flights==3.1.0", "primp==2.0.1", "selectolax==1.0.2",
             "typing_extensions==4.16.0",  # fast-flights imports it without declaring it
             "pyinstaller==6.22.3"]
