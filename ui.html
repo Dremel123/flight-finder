@@ -98,6 +98,7 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 .chips.bad { border-color: var(--rush); box-shadow: 0 0 0 1px var(--rush); }
 .more-chips, .undo-chip { border: 0; background: none; cursor: pointer; padding: 6px 0 0; color: var(--band-text); font-weight: 600; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
 .more-chips[hidden], .undo-chip[hidden] { display: none; }
+.more-chips + .undo-chip { margin-left: 18px; }
 .hint { font-size: 14px; color: var(--band-muted); margin: 6px 0 0; }
 .toggles { display: flex; flex-wrap: wrap; gap: 8px; }
 .toggle { position: relative; }
@@ -141,7 +142,7 @@ main { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .tab[aria-selected=true] { color: var(--print); box-shadow: inset 0 -4px 0 var(--band); }
 .tab[aria-selected=true] .n { background: var(--band); color: var(--band-text); }
 .tool { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 15px; font-weight: 500; }
-.tool input[type=search], .tool select { border: 1px solid var(--seam); border-radius: 6px; background: var(--paper); padding: 9px 12px; font-size: 16px; color: var(--print); }
+.tool input[type=search], .tool input[type=time], .tool select { border: 1px solid var(--seam); border-radius: 6px; background: var(--paper); padding: 9px 12px; font-size: 16px; color: var(--print); }
 .tool input[type=search] { width: 230px; }
 .tool select { -webkit-appearance: none; appearance: none; padding-right: 36px; cursor: pointer;
   background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230E5E48' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center / 14px; }
@@ -365,6 +366,8 @@ main { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
     </div>
     <label class="tool"><input type="search" id="filter" placeholder="Filter: STN, Ryanair" aria-label="Filter trips"></label>
     <label class="tool">Up to <input type="range" id="maxprice" min="0" step="5"><output id="maxprice-out"></output></label>
+    <span class="tool">Leaves <input type="time" id="dep_from" aria-label="Leaves from"> – <input type="time" id="dep_to" aria-label="Leaves until"></span>
+    <span class="tool">Lands <input type="time" id="arr_from" aria-label="Lands from"> – <input type="time" id="arr_to" aria-label="Lands until"></span>
     <label class="tool">Sort <select id="sort">
       <option value="price">Cheapest</option>
       <option value="date">Earliest</option>
@@ -798,7 +801,10 @@ function render() {
   };
   const s = read();
   const all = tripsFor(dir), hidden = dir === "favourites" ? 0 : data[dir].length - all.length;
-  const trips = all.filter(t => t.pay <= max && (!q ||
+  // Local clock times; an empty end means no limit, and from > to wraps past midnight (22:00 – 02:00)
+  const inHours = (hm, a, b) => !a && !b || (a && b && a > b ? hm >= a || hm <= b : (!a || hm >= a) && (!b || hm <= b));
+  const [df, dt, af, at] = ["dep_from", "dep_to", "arr_from", "arr_to"].map(id => $(id).value);
+  const trips = all.filter(t => t.pay <= max && inHours(t.legs[0].dep, df, dt) && inHours(t.legs.at(-1).arr, af, at) && (!q ||
     t.route.join(" ").includes(q) || t.legs.some(l => l.airline.toUpperCase().includes(q))))
     .sort(sorters[$("sort").value]);
   const list = $("list");
@@ -811,7 +817,7 @@ function render() {
     return;
   }
   if (!trips.length) {
-    list.innerHTML = `<div class="empty"><b>Nothing matches</b>Clear the filter or raise the price limit.</div>`;
+    list.innerHTML = `<div class="empty"><b>Nothing matches</b>Clear the filters or raise the price limit.</div>`;
     return;
   }
   const shown = trips.slice(0, 300);
@@ -917,7 +923,7 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === t));
   render();
 });
-["filter", "maxprice", "sort"].forEach(id => $(id).addEventListener("input", render));
+["filter", "maxprice", "sort", "dep_from", "dep_to", "arr_from", "arr_to"].forEach(id => $(id).addEventListener("input", render));
 document.querySelector("aside .form").addEventListener("change", () => { if (data.outbound) { countTabs(); syncSlider(); render(); } });
 ["input", "change"].forEach(ev => document.querySelector("aside").addEventListener(ev, () => { if (B) estimate(); }));
 $("cancel").onclick = () => { B.cancel(); $("cancel").disabled = true; $("progress-text").textContent = "Cancelling: finishing the lookups already under way…"; };
